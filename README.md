@@ -4,6 +4,8 @@
 
 The project is intentionally notebook-native: it can be executed in Colab or Kaggle with GPU acceleration, authenticates against gated Hugging Face models, runs TRIBE v2 inference over video/audio/image stimuli, and exposes an interactive Gradio dashboard for frame-level inspection.
 
+Direct Kaggle launch: [https://www.kaggle.com/code/adarshm12/neuroad](https://www.kaggle.com/code/adarshm12/neuroad)
+
 ## Core Idea
 
 Modern ad analytics usually measures behavior after exposure. NeuroAd explores the harder question: **what does the creative stimulus look like inside a predicted brain-response manifold before the campaign is shipped?**
@@ -26,7 +28,7 @@ NeuroAd is not a conventional marketing dashboard. It is a research-grade creati
 
 The main artifact is:
 
-- `neuroad.ipynb`
+- [`Notebook/neuroad.ipynb`](Notebook/neuroad.ipynb)
 
 It includes installation, environment verification, Hugging Face authentication, TRIBE v2 model loading, Kaggle/Colab compatibility fixes, short smoke tests, lightweight visualization, Gradio dashboard execution, and export utilities.
 

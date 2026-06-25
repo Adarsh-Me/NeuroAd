@@ -79,9 +79,10 @@ The long-term product direction is a campaign brain lab: a system where creative
 
 Primary artifact:
 
-- `neuroad.ipynb`
+- [`Notebook/neuroad.ipynb`](Notebook/neuroad.ipynb)
 
 Supporting documentation:
 
 - `README.md`
 - `SUMMARY.md`
+- Kaggle launch: https://www.kaggle.com/code/adarshm12/neuroad
