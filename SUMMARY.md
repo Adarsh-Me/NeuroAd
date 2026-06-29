@@ -1,88 +1,173 @@
 # NeuroAd Technical Summary
 
-NeuroAd is a multimodal neural-response analytics prototype for advertising and campaign media. It operationalizes Meta's TRIBE v2 brain-encoding model as a creative-intelligence engine, transforming videos, images, and audio stimuli into predicted cortical activity and NeuroAd-specific diagnostic telemetry.
+NeuroAd is a multimodal neural-response inference prototype for advertising media. It uses Meta TRIBE v2 as the core brain-encoding model and surrounds it with a practical product layer for media ingestion, hosted runtime compatibility, neural tensor export, visualization, and campaign-facing interpretation.
 
-## Conceptual Thesis
+The system is best understood as a **media-to-cortical-telemetry pipeline**. A creative asset enters the notebook as a video, image, or audio file. NeuroAd converts that asset into model-compatible event sequences, runs TRIBE v2 inference, receives predicted cortical activity over time, and translates the output into interpretable signals for creative analysis.
 
-Advertising analytics is usually downstream, behavioral, and delayed. NeuroAd pushes the analysis upstream. It asks whether a creative asset can be interrogated as a neural stimulus before market deployment, producing a structured approximation of how the asset may distribute salience, memory pressure, affective valence, and cognitive load over time.
+## High-Level Objective
 
-In practical terms, NeuroAd turns campaign media into a temporally indexed neuro-response object.
+The goal is to transform ad evaluation from a purely behavioral, downstream workflow into a model-assisted, upstream diagnostic workflow. Rather than waiting for post-launch metrics, NeuroAd attempts to estimate how a media asset may distribute attention, memory pressure, emotional directionality, and cognitive load across time.
 
-## System Architecture
+The product concept is a campaign brain lab: upload a creative stimulus, simulate a neural-response trace, inspect frame-level activation behavior, and export the result for deeper analysis.
 
-The notebook pipeline is organized into five layers:
+## System Decomposition
 
-1. **Runtime substrate**  
-   GPU-enabled notebook execution with explicit dependency control for Colab and Kaggle.
+NeuroAd contains six major subsystems.
 
-2. **Model substrate**  
-   TRIBE v2 loading through gated Hugging Face authentication and compatibility handling for hosted notebook environments.
+### 1. Runtime And Environment Layer
 
-3. **Stimulus substrate**  
-   Media normalization for video, image, and audio inputs, including conversion utilities that make non-video assets ingestible by the TRIBE event pipeline.
+This layer prepares the notebook execution environment. It defines cache directories, media directories, export directories, and detects hosted notebook behavior. The project was built to survive both Colab and Kaggle, which have different filesystem conventions, GPU availability patterns, and preinstalled dependency stacks.
 
-4. **Inference substrate**  
-   TRIBE event construction, multimodal feature extraction, brain-response prediction, caching, and export.
+Key responsibilities:
 
-5. **Interpretability substrate**  
-   NeuroAd proxy metrics, cortical heat summaries, timeline plots, frame-level creative labeling, and Gradio-based inspection.
+- create stable working paths
+- configure cache, media, and export folders
+- support Colab and Kaggle execution
+- reduce repeated setup friction
 
-## NeuroAd Proxy Signals
+### 2. Dependency And Compatibility Layer
 
-The dashboard derives campaign-facing signals from predicted BOLD response tensors:
+This is one of the most important engineering parts of the project. TRIBE v2 depends on a sensitive stack involving PyTorch, Torchvision, Transformers, Hugging Face Hub, and other scientific packages. Kaggle and Colab frequently ship package versions that are not mutually compatible.
 
-- **Attention Capture**: high-percentile absolute activation intensity across time
-- **Memory Encoding**: positive-response intensity used as a coarse memory-pressure proxy
-- **Emotional Valence**: lateralized activation contrast transformed into a directional score
-- **Cognitive Load**: dispersion and temporal-change pressure used to flag overload conditions
+NeuroAd includes explicit handling for:
 
-These are not clinical measurements. They are operational heuristics designed to make high-dimensional neural predictions usable for creative diagnostics.
+- CUDA-enabled Torch installation
+- Torchvision schema registration problems
+- missing `torchvision::nms` operator metadata
+- Hugging Face Hub API drift
+- Transformers version compatibility
+- Gradio schema-route failures
+- notebook kernel memory constraints
 
-## Novelty
+This turns the notebook from a fragile research artifact into a more reproducible runtime product.
 
-The central novelty is the compression of neural encoding outputs into an advertising-native decision interface. Instead of displaying raw model outputs, NeuroAd maps predicted cortical activity into the vocabulary of campaign review: salience, overload, emotional approach, memory trace strength, and frame-level creative risk.
+### 3. Authentication Layer
 
-This creates a bridge between computational neuroscience and creative strategy.
+TRIBE v2 access requires Hugging Face authentication and accepted gated-model terms. NeuroAd supports multiple credential paths:
 
-## Kaggle And Colab Compatibility
+- Kaggle Secrets
+- Colab Secrets
+- environment variables
+- secure manual prompt fallback
 
-The notebook includes explicit handling for hosted-notebook instability:
+This allows the same notebook to function across public hosted environments without hardcoding secrets.
 
-- Kaggle secrets support for `HF_TOKEN`
-- Colab secrets support for `HF_TOKEN`
-- pinned Torch/Torchvision CUDA wheel strategy
-- Transformers and Hugging Face Hub compatibility pins
-- Torchvision import guards for Kaggle operator-registration failures
-- Gradio API schema workaround for Kaggle runtime combinations
-- lightweight visualization fallback to avoid kernel crashes
-- short audio/video smoke tests to avoid VRAM exhaustion
+### 4. Stimulus Construction Layer
 
-## Practical Constraints
+The system normalizes campaign assets into model-ingestible stimuli. This layer handles:
 
-TRIBE v2 inference is memory intensive. Audio-enabled clips are especially expensive because the audio extractor can allocate large intermediate tensors. On Kaggle-class GPUs, short clips are recommended. Full-length campaign analysis should run on larger GPU hardware such as L4, A100, or equivalent infrastructure.
+- video inputs
+- image-to-video conversion
+- audio-to-video wrapping
+- short media generation for Kaggle-safe tests
+- event dataframe creation
 
-## Research And Product Potential
+The key artifact here is the event dataframe. It becomes the structured bridge between raw media and TRIBE v2 inference.
 
-NeuroAd can become the foundation for:
+### 5. Neural Encoding Layer
 
-- pre-market creative scoring
-- campaign moment detection
-- overload-risk analysis
-- neural telemetry benchmarking
-- multimodal ad comparison
-- automated creative editing recommendations
-- ROI-calibrated neurocreative intelligence
+The neural encoding layer loads TRIBE v2 and runs prediction over the event sequence. Its output is a high-dimensional tensor representing predicted cortical activity across timesteps and brain vertices.
 
-The long-term product direction is a campaign brain lab: a system where creative teams upload stimulus assets and receive time-resolved neural-response diagnostics before media spend is committed.
+Conceptually:
 
-## Artifact
+```text
+stimulus media -> event dataframe -> TRIBE v2 -> predicted cortical response tensor
+```
 
-Primary artifact:
+This tensor is the core technical output of the system.
 
-- [`Notebook/neuroad.ipynb`](Notebook/neuroad.ipynb)
+### 6. Interpretability And Product Layer
 
-Supporting documentation:
+Raw cortical tensors are not directly useful to a creative strategist or product evaluator. NeuroAd derives proxy metrics and visual summaries from the prediction tensor.
 
-- `README.md`
-- `SUMMARY.md`
-- Kaggle launch: https://www.kaggle.com/code/adarshm12/neuroad
+The project exposes:
+
+- attention capture score
+- memory encoding score
+- emotional valence score
+- cognitive load score
+- overload-risk classification
+- timeline visualization
+- cortical activity summary
+- event dataframe preview
+- exportable NPY and CSV files
+
+## Data Flow
+
+The complete execution flow is:
+
+1. User provides media or selects a sample asset.
+2. Notebook normalizes the asset into an ingestible stimulus.
+3. TRIBE event dataframe is created.
+4. TRIBE v2 predicts cortical response over time.
+5. Prediction tensor is cached and transformed.
+6. NeuroAd derives proxy metrics from the tensor.
+7. Visualizations are generated for inspection.
+8. Artifacts are exported for downstream analysis.
+
+## Sample Artifacts
+
+The repository includes sample output artifacts in [Sample Output](Sample%20Output).
+
+Included files:
+
+- `prediction_9b678890fb8ca401.npy`: predicted neural activity tensor
+- `events_9b678890fb8ca401.csv`: event metadata dataframe
+- `newplot.png`: cortical activity visualization
+- screenshot images showing runtime/dashboard output states
+
+The sample output demonstrates that the notebook is not merely conceptual. It produces concrete artifacts that can be loaded, inspected, visualized, and used for subsequent experimentation.
+
+## Technical Complexity
+
+The project has meaningful complexity across several axes.
+
+### Multimodal Complexity
+
+The system has to reason over video, audio, and image inputs. These media types have different preprocessing needs, temporal structures, and memory costs.
+
+### Model Complexity
+
+TRIBE v2 is not a small classical ML model. It is a neural encoding system with gated model access, substantial dependency requirements, and heavy inference demands.
+
+### Runtime Complexity
+
+Hosted notebooks are volatile. They have preinstalled packages, limited GPU memory, notebook-specific process behavior, and inconsistent package resolver outcomes. NeuroAd includes compatibility patches because the target runtime is part of the engineering problem.
+
+### Interpretation Complexity
+
+Predicted cortical tensors are not naturally product-friendly. NeuroAd adds a conversion layer that turns dense model output into attention, memory, valence, and load proxies.
+
+### Product Complexity
+
+The project exposes an interactive workflow, exportable artifacts, and sample results. This makes it closer to a product prototype than a one-off model experiment.
+
+## Why It Matters
+
+NeuroAd points toward a new kind of advertising technology: neural-response-informed creative intelligence. The system does not simply classify an ad as good or bad. It tries to expose when a stimulus becomes salient, when it may overload viewers, when memory pressure increases, and where the creative timeline may contain stronger or weaker response moments.
+
+That makes the project valuable as a technical demonstration of:
+
+- applied neural encoding
+- multimodal inference engineering
+- hosted GPU deployment
+- model-output interpretability
+- creative analytics product thinking
+
+## Repository Artifacts
+
+Primary notebook:
+
+- [Notebook/neuroad.ipynb](Notebook/neuroad.ipynb)
+
+Sample outputs:
+
+- [Sample Output](Sample%20Output)
+
+Live Kaggle notebook:
+
+- https://www.kaggle.com/code/adarshm12/neuroad
+
+## Current Status
+
+NeuroAd is a research-grade prototype. It is not a clinical neuroscience system and should not be interpreted as validated human-subject measurement. It is a technically ambitious proof of concept for applying neural encoding models to creative media analysis and pre-market campaign intelligence.
